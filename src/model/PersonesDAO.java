@@ -23,7 +23,16 @@ public class PersonesDAO {
 		List<Persona> personesList = new ArrayList<Persona>();
 		try (ResultSet result = conexionBD.createStatement().executeQuery("SELECT * FROM persones")) {
 			while (result.next()) {
-				personesList.add(new Persona(result.getInt("id"), result.getString("nom"), result.getString("apellidos"),result.getString("email"),result.getString("telefon")));
+				personesList.add(
+					new Persona(
+						result.getInt("id"), 
+						result.getString("nom"), 
+						result.getString("apellidos"),
+						result.getString("email"),
+						result.getString("telefon"),
+						result.getString("direccion")
+					)
+				);
 			}
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());

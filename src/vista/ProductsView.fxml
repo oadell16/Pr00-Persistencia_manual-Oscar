@@ -16,13 +16,13 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<AnchorPane fx:id="anchorPane" prefHeight="500.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controlador.PersonesController">
+<AnchorPane fx:id="anchorPane" prefHeight="500.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controlador.ProductesController">
    <children>
       <SplitPane dividerPositions="0.29106945975744214" prefHeight="500.0" prefWidth="900.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <items>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="600.0" prefWidth="100.0">
                <children>
-                  <TableView fx:id="personesTable" layoutY="8.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                  <TableView fx:id="productesTable" layoutY="8.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <columns>
                       <TableColumn fx:id="idColumn" prefWidth="75.0" text="ID" />
                       <TableColumn fx:id="nomColumn" prefWidth="75.0" text="Nom" />
@@ -59,13 +59,13 @@
                         <Label text="Fecha final" GridPane.rowIndex="5" />
                         <TextField fx:id="idTextField" onKeyPressed="#onKeyPressedId" GridPane.columnIndex="1" />
                         <TextField fx:id="nomTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <TextField fx:id="precioTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <TextField fx:id="priceTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                         <TextField fx:id="stockTextField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                         <DatePicker fx:id="finalDateTextField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                         <DatePicker fx:id="initialDateTextField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                         <CheckBox fx:id="packCheckBox" mnemonicParsing="false" text="Pack" GridPane.rowIndex="6" />
                         <Label text="DTO %" GridPane.rowIndex="7" />
-                        <TextField fx:id="dtoTextField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                        <TextField fx:id="dtoTextField" disable="true" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                      </children>
                   </GridPane>
                   <ToolBar accessibleRole="BUTTON" layoutX="55.0" layoutY="436.0" prefHeight="40.0" prefWidth="220.0" AnchorPane.bottomAnchor="20.0" AnchorPane.rightAnchor="20.0">
@@ -78,7 +78,7 @@
                         <Insets />
                      </opaqueInsets>
                   </ToolBar>
-                  <TextArea fx:id="idProductsTextArea" layoutX="20.0" layoutY="307.0" prefHeight="91.0" prefWidth="230.0" />
+                  <TextArea fx:id="idProductsTextArea" disable="true" layoutX="20.0" layoutY="307.0" prefHeight="91.0" prefWidth="230.0" />
                   <Label layoutX="20.0" layoutY="281.0" text="Id dels productes que formen el pack:" />
                </children>
             </AnchorPane>

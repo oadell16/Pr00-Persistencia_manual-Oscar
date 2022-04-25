@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.TreeSet;
 
 import org.controlsfx.validation.ValidationSupport;
@@ -15,32 +17,37 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 import model.Pack;
-import model.Product;
+import model.Productes;
 import model.ProductesDAO;
 
 public class ProductesController{
 
 	//Objecte per gestionar la persistència de les dades
 	private ProductesDAO productesDAO;
-	//Objecte per gestionar el objecte actual
-	private Product product = null;
+	//Objectes per gestionar el objecte actual
+	private Productes product = null;
+	private Pack pack = null;
 	//indicador de nou registre
 	private boolean nouRegistre = false;
+
 	//objecte per afegir les files de la taula
-	private ObservableList<Product> productesData;
+	private ObservableList<Productes> productesData;
 
 	//Elements gràfics de la UI
 	@FXML
@@ -56,14 +63,14 @@ public class ProductesController{
 	@FXML private TextArea idProductsTextArea;
 	@FXML private TextField dtoTextField;
 	
-	@FXML private TableView<Product> productesTable;
-	@FXML private TableColumn<Product, Integer> idColumn;
-	@FXML private TableColumn<Product, String> nomColumn;
+	@FXML private TableView<Productes> productesTable;
+	@FXML private TableColumn<Productes, Integer> idColumn;
+	@FXML private TableColumn<Productes, String> nomColumn;
 
 	private ValidationSupport vs;
 
 	// Crear conexion a la base de datos
-	public void setConexionBD(Connection conexionBD) {	
+	public void setConexionBD(Connection conexionBD) {
 		//Crear objecte DAO de persones
 		productesDAO = new ProductesDAO(conexionBD);
 		
@@ -72,14 +79,17 @@ public class ProductesController{
 		productesData = FXCollections.observableList(productesDAO.getProductesList());
 		productesTable.setItems(productesData);
 	}
-
+	
 	/**
 	 * Inicialitza la classe. JAVA l'executa automàticament després de carregar el fitxer fxml
 	 */
 	@FXML private void initialize() {
-		//Obrir el fitxer de persones
-		products = new ProductesDAO();
-		products.load();
+		idColumn.setCellValueFactory(new PropertyValueFactory<Productes,Integer>("id"));
+		nomColumn.setCellValueFactory(new PropertyValueFactory<Productes,String>("name"));
+
+		// Quan l'usuari canvia de linia executem el métode mostrarPersona
+		productesTable.getSelectionModel().selectedItemProperty().addListener(
+				(observable, oldValue, newValue) -> mostrar(newValue));
 
 		//Validació dades
 		//https://github.com/controlsfx/controlsfx/issues/1148
@@ -104,7 +114,7 @@ public class ProductesController{
 	}
 
 	@FXML private void onCheckPack(ActionEvent e) throws IOException{
-		if (checkPack.isSelected()) {
+		if (packCheckBox.isSelected()) {
 			idProductsTextArea.setDisable(false);
 			dtoTextField.setDisable(false);
 			vs.registerValidator(idProductsTextArea, true, Validator.createEmptyValidator("ids dels productes obligatori"));
@@ -126,111 +136,127 @@ public class ProductesController{
 
 	@FXML private void onKeyPressedId(KeyEvent e) throws IOException {
 		if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.TAB){
-				
-				if (products.search(Integer.parseInt(idTextField.getText())) instanceof Product) {
-					//Comprovar si existeix la persona indicada en el control idTextField
-					Product product = products.search(Integer.parseInt(idTextField.getText()));
-					
-					//posar els valors per modificarlos
-					nomTextField.setText(product.getName());
-					priceTextField.setText(product.getSalePrice().toString());
-					stockTextField.setText(product.getStock().toString());
-					stockTextField.setDisable(true);
-					initialDateTextField.setValue(product.getInitialCatalogDate());
-					finalDateTextField.setValue(product.getEndCatalogDate());
-					
-				}else if(products.search(Integer.parseInt(idTextField.getText())) instanceof Pack){
-					Pack pack = (Pack)products.search(Integer.parseInt(idTextField.getText()));
 
-					nomTextField.setText(pack.getName());
-					priceTextField.setText(pack.getSalePrice().toString());
-					stockTextField.setText(pack.getStock().toString());
-					stockTextField.setDisable(true);
-					initialDateTextField.setValue(pack.getInitialCatalogDate());
-					finalDateTextField.setValue(pack.getEndCatalogDate());
+			if (productesDAO.isPack(Integer.parseInt(idTextField.getText()))) {
+				packCheckBox.setSelected(true);
+			}else{
+				packCheckBox.setSelected(false);
+				dtoTextField.setText("");
+				idProductsTextArea.setText("");
+			}
 
-					idProductsTextArea.setText(pack.getIds().toString());
-					dtoTextField.setText(pack.getPercentageDiscount().toString());
-
-				}else{ 
-					//nou registre
-					nomTextField.setText("");
-					priceTextField.setText("");
-					stockTextField.setText("");
-					stockTextField.setDisable(false);
-					initialDateTextField.setValue(null);
-					finalDateTextField.setValue(null);
-					idProductsTextArea.setText("");
-					dtoTextField.setText("");
-				}
+			if (!isCheckedCheckBoxPack() ) {
+				product = productesDAO.findProducte(Integer.parseInt(idTextField.getText()));
+				mostrarProducte(product);
+			}else{
+				pack = productesDAO.findPack(Integer.parseInt(idTextField.getText()));
+				mostrarPack(pack);
+			}
+			//Comprovar si existeix la persona indicada en el control idTextField
+			
+			//seleccionar la fila de la taula asociada al codi introduit
+			productesTable.getSelectionModel().select(product);
+			productesTable.refresh();
 		}
 		
 	}
-	 
+	
 	@FXML private void onActionGuardar(ActionEvent e) throws IOException {
-		//verificar si les dades són vàlides				
+		//verificar si les dades són vàlides
 		if(isDatosValidos()){
-			if (products.search(Integer.parseInt(idTextField.getText())) instanceof Product) {
-				Product product = new Product(Integer.parseInt(idTextField.getText()), nomTextField.getText(),Integer.parseInt(priceTextField.getText()),
-				Integer.parseInt(stockTextField.getText()),initialDateTextField.getValue(),finalDateTextField.getValue());
-				
-				
-				products.add(product);
-				limpiarFormulario();
-				System.out.println(products.getMap());
-			}else{
-				TreeSet<Product> ids = new TreeSet<Product>();
-				String[] idsProducts = idProductsTextArea.getText().split(",");
 
-				for (String id : idsProducts) {
-					if (products.search(Integer.parseInt(id))!=null) {
-						ids.add(products.search(Integer.parseInt(id)));
-					}
+			//Si no esta checkeada la checkbox pack creara un producto
+			if(!productesDAO.isPack(Integer.parseInt(idTextField.getText()))){
+				if(nouRegistre){
+					product = new Productes(
+						Integer.parseInt(idTextField.getText()), 
+						nomTextField.getText(), 
+						Float.parseFloat(priceTextField.getText()),
+						Integer.parseInt(stockTextField.getText()), 
+						initialDateTextField.getValue(),
+						finalDateTextField.getValue()
+					);
+					productesData.add(product);
+					
+				}else{
+					//modificació registre existent
+					product = productesTable.getSelectionModel().getSelectedItem();
+
+					product.setName(nomTextField.getText());
+					product.setPrice(Float.parseFloat(priceTextField.getText()));
+					product.setStock(Integer.parseInt(stockTextField.getText()));
+					product.setInitialCatalogDate(initialDateTextField.getValue());
+					product.setEndCatalogDate(initialDateTextField.getValue());
 				}
+				productesDAO.saveProduct(product);
 
-				if (ids!=null) {
-					Pack pack = new Pack(
+			}else{
+				List<Integer> listIds = new ArrayList<Integer>();
+				String[] arrayIds= idProductsTextArea.getText().split(",");
+
+				for (int i = 0; i < arrayIds.length; i++) {
+					listIds.add(Integer.parseInt(arrayIds[i]));
+				}
+				System.out.println("lisids");
+				System.out.println(listIds);
+
+				System.out.println(Integer.parseInt(dtoTextField.getText()));
+				
+				pack = new Pack(
 					Integer.parseInt(idTextField.getText()), 
-					nomTextField.getText(),
-					Integer.parseInt(priceTextField.getText()),
-					Integer.parseInt(stockTextField.getText()),
+					nomTextField.getText(), 
+					Float.parseFloat(priceTextField.getText()),
+					Integer.parseInt(stockTextField.getText()), 
 					initialDateTextField.getValue(),
 					finalDateTextField.getValue(),
-					ids,
+					listIds,
 					Integer.parseInt(dtoTextField.getText())
-					);
+				);
 
-					products.add(pack);
-
-
-				}
-				
-				limpiarFormulario();
-				System.out.println(products.getMap().toString());
+				productesDAO.savePack(pack);
 			}
+		
 		}
+
+		limpiarFormulario();
+		productesTable.refresh();
 	}
 
 	@FXML private void onActionEliminar(ActionEvent e) throws IOException {
-
 		if(isDatosValidos()){
-			if(products.delete(Integer.parseInt(idTextField.getText()))==null){
-				limpiarFormulario();
-				System.out.println(products.getMap());
+			// Mostrar missatge confirmació
+			Alert alert = new Alert(AlertType.CONFIRMATION);
+			alert.setHeaderText("Vol esborrar el producte " + idTextField.getText() + "?");
+			Optional<ButtonType> result = alert.showAndWait();
+			if (result.get() == ButtonType.OK) {
+				if (!isCheckedCheckBoxPack()) {
+					if(productesDAO.deleteProducte(Integer.parseInt(idTextField.getText()))){ 
+						productesData.remove(productesTable.getSelectionModel().getSelectedIndex());
+	
+						limpiarFormulario();
+						// productesDAO.showAll();
+					}
+				} else {
+					if(productesDAO.deletePack(Integer.parseInt(idTextField.getText()))){ 
+						productesData.remove(productesTable.getSelectionModel().getSelectedIndex());
+	
+						limpiarFormulario();
+						// productesDAO.showAll();
+					}
+				}
+				
 			}
 		}
 	}
 
 	@FXML private void onActionSortir(ActionEvent e) throws IOException {
-
 		sortir();
-
-		ventana.close();
+		//tancar el formulari
+		((BorderPane)anchorPane.getParent()).setCenter(null);
 	}
 
 	public void sortir(){
-		products.save();
-		System.out.println(products.getMap());
+		// productesDAO.showAll();
 	}
 
 	private boolean isDatosValidos() {
@@ -253,6 +279,70 @@ public class ProductesController{
 
 	}
 
+	private void mostrar(Productes producte){	
+		if (productesDAO.isPack(producte.getId())) {
+			mostrarPack(productesDAO.findPack(producte.getId()));
+		}else{
+			mostrarProducte(producte);
+		}
+		
+	}
+
+	private void mostrarProducte(Productes producte) {
+		packCheckBox.setSelected(false);
+		enableDisablePackFields(false);
+
+		this.isCheckedCheckBoxPack();
+		if(producte != null){ 
+			//llegir persona (posar els valors als controls per modificar-los)
+			nouRegistre = false;
+			idTextField.setText(String.valueOf(producte.getId()));
+			nomTextField.setText(producte.getName());
+			priceTextField.setText(producte.getPrice().toString());
+			stockTextField.setText(producte.getStock().toString());
+			initialDateTextField.setValue(producte.getInitialCatalogDate());
+			finalDateTextField.setValue(producte.getEndCatalogDate());
+		}else{ 
+			//nou registre
+			nouRegistre = true;
+			//idTextField.setText(""); no hem de netejar la PK perquè l'usuari ha posat un valor
+			nomTextField.setText("");
+			priceTextField.setText("");
+			stockTextField.setText("");
+			initialDateTextField.setValue(null);
+			finalDateTextField.setValue(null);
+		}
+	}
+	
+	private void mostrarPack(Pack pack) {
+		packCheckBox.setSelected(true);
+		enableDisablePackFields(true);
+		if(pack != null){ 
+			//llegir persona (posar els valors als controls per modificar-los)
+			nouRegistre = false;
+			idTextField.setText(String.valueOf(pack.getId()));
+			nomTextField.setText(pack.getName());
+			priceTextField.setText(pack.getPrice().toString());
+			stockTextField.setText(pack.getStock().toString());
+			initialDateTextField.setValue(pack.getInitialCatalogDate());
+			finalDateTextField.setValue(pack.getEndCatalogDate());
+			
+			idProductsTextArea.setText(productesDAO.getListproductsString(pack.getIds()));
+			dtoTextField.setText(pack.getPercentageDiscount().toString());
+		}else{ 
+			//nou registre
+			nouRegistre = true;
+			//idTextField.setText(""); no hem de netejar la PK perquè l'usuari ha posat un valor
+			nomTextField.setText("");
+			priceTextField.setText("");
+			stockTextField.setText("");
+			initialDateTextField.setValue(null);
+			finalDateTextField.setValue(null);
+			idProductsTextArea.setText("");
+			dtoTextField.setText("");
+		}
+	}
+
 	private void limpiarFormulario(){
 		idTextField.setText("");
 		nomTextField.setText("");
@@ -262,5 +352,22 @@ public class ProductesController{
 		finalDateTextField.setValue(null);
 		idProductsTextArea.setText("");
 		dtoTextField.setText("");
+	}
+
+	private void enableDisablePackFields(boolean enabled){
+		if (enabled) {
+			dtoTextField.setDisable(false);
+			idProductsTextArea.setDisable(false);
+		}else{
+			dtoTextField.setDisable(true);
+			idProductsTextArea.setDisable(true);
+			dtoTextField.setText("");
+			idProductsTextArea.setText("");
+		}
+	}
+	
+	private boolean isCheckedCheckBoxPack(){
+		if (packCheckBox.isSelected()) return true;
+		else return false;
 	}
 }

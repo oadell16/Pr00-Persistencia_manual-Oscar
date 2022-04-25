@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,50 +25,175 @@ public class ProductesDAO{
 		this.conexionBD = conexionBD;
 	}
 
-    public List<Product> getProductesList() {
-		List<Product> productesList = new ArrayList<Product>();
-		try (ResultSet result = conexionBD.createStatement().executeQuery("SELECT * FROM persones")) {
+    public List<Productes> getProductesList() {
+		List<Productes> productesList = new ArrayList<Productes>();
+		try (ResultSet result = conexionBD.createStatement().executeQuery("SELECT * FROM productes")) {
 			while (result.next()) {
-				productesList.add(
-                    new Product(
-                        result.getInt("id"), 
-                        result.getString("name"), 
-                        result.getInt("price"),
-                        result.getInt("stock"),
-                        result.getDate("initialCatalogDate").toLocalDate(),
-                        result.getDate("endCatalogDate").toLocalDate()
-                    )
-                        
-                );
+				if (this.isPack(result.getInt("id"))) {
+
+					List<Integer> ids = this.findProductes_pack(result.getInt("id"));
+					try (ResultSet resultPack = conexionBD.createStatement().executeQuery("SELECT * FROM pack where id="+result.getInt("id"))) {
+						if (resultPack.next()) {
+							productesList.add(
+								new Pack(
+									resultPack.getInt("id"), 
+									resultPack.getString("nombre"), 
+									resultPack.getFloat("precio"),
+									resultPack.getInt("stock"),
+									resultPack.getDate("fecha_inicial_catalogo").toLocalDate(),
+									resultPack.getDate("fecha_final_catalogo").toLocalDate(),
+									ids,
+									resultPack.getInt("dto")
+								)
+							);
+						}
+						
+					}catch (SQLException e) {
+						System.out.println(e.getMessage());
+					}
+
+				}else{
+					productesList.add(
+						new Productes(
+							result.getInt("id"), 
+							result.getString("nombre"), 
+							result.getFloat("precio"),
+							result.getInt("stock"),
+							result.getDate("fecha_inicial_catalogo").toLocalDate(),
+							result.getDate("fecha_final_catalogo").toLocalDate()
+						)
+							
+					);
+				}
+				
 			}
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
+
+		System.out.println(productesList);
 		return productesList;
 	}
 
-    public boolean save(Product product){
+    public boolean saveProduct(Productes product){
 		try {
-			String sql = "";
+            String sql = "";
 			PreparedStatement stmt = null;
-			if (this.find(product.getId()) == null){
-				sql = "INSERT INTO persones VALUES(?,?,?,?,?)";
+
+            if (this.findProducte(product.getId()) == null) {
+				sql = "INSERT INTO productes VALUES(?,?,?,?,?,?)";
 				stmt = conexionBD.prepareStatement(sql);
 				int i = 1;
 				stmt.setInt(i++, product.getId());
 				stmt.setString(i++, product.getName());
-				stmt.setString(i++, product.getPrice());
-				stmt.setString(i++, product.getEmail());
-				stmt.setString(i++, product.getTelefon());
-			} else{
-				sql = "UPDATE persones SET nom=?,apellidos=?,email=?,telefon=? WHERE id = ?";
+				stmt.setFloat(i++, product.getPrice());
+				stmt.setInt(i++, product.getStock());
+				stmt.setDate(i++, Date.valueOf(product.getInitialCatalogDate()));
+				stmt.setDate(i++, Date.valueOf(product.getEndCatalogDate()));
+            }else {
+                sql = "UPDATE productes SET nombre=?,precio=?,stock=?,fecha_inicial_catalogo=?,fecha_final_catalogo=? WHERE id = ?";
 				stmt = conexionBD.prepareStatement(sql);
 				int i = 1;
-				stmt.setString(i++, persona.getNom());
-				stmt.setString(i++, persona.getApellidos());
-				stmt.setString(i++, persona.getEmail());
-				stmt.setString(i++, persona.getTelefon());
-				stmt.setInt(i++, persona.getId());
+				stmt.setString(i++, product.getName());
+				stmt.setFloat(i++, product.getPrice());
+				stmt.setInt(i++, product.getStock());
+				stmt.setDate(i++, Date.valueOf(product.getInitialCatalogDate()));
+				stmt.setDate(i++, Date.valueOf(product.getEndCatalogDate()));
+				stmt.setInt(i++, product.getId());
+            };
+
+			int rows = stmt.executeUpdate();
+			if (rows == 1) return true;
+			else return false;
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
+	
+    public boolean savePack(Pack pack){
+		try {
+            String sqlPack = "";
+			PreparedStatement stmtPack = null;
+			int rowsPack = 0;
+
+            if(this.findPack(pack.getId()) == null) {
+				sqlPack = "INSERT INTO pack VALUES(?,?,?,?,?,?,?)";
+				stmtPack = conexionBD.prepareStatement(sqlPack);
+				int i = 1;
+				stmtPack.setInt(i++, pack.getId());
+				stmtPack.setString(i++, pack.getName());
+				stmtPack.setFloat(i++, pack.getPrice());
+				stmtPack.setInt(i++, pack.getStock());
+				stmtPack.setDate(i++, Date.valueOf(pack.getInitialCatalogDate()));
+				stmtPack.setDate(i++, Date.valueOf(pack.getEndCatalogDate()));
+				stmtPack.setInt(i++, pack.getPercentageDiscount());
+
+            }else{
+				System.out.println("update");
+                sqlPack = "UPDATE pack SET nombre=?,precio=?,stock=?,fecha_inicial_catalogo=?,fecha_final_catalogo=?,dto=? WHERE id = "+pack.getId();
+				stmtPack = conexionBD.prepareStatement(sqlPack);
+
+				int i = 1;
+				//modificar el pack
+				stmtPack.setString(i++, pack.getName());
+				stmtPack.setFloat(i++, pack.getPrice());
+				stmtPack.setInt(i++, pack.getStock());
+				stmtPack.setDate(i++, Date.valueOf(pack.getInitialCatalogDate()));
+				stmtPack.setDate(i++, Date.valueOf(pack.getEndCatalogDate()));
+				stmtPack.setInt(i++, pack.getPercentageDiscount());
+            };
+
+			rowsPack = stmtPack.executeUpdate();
+			System.out.println("rowsPack");
+			System.out.println(rowsPack);
+			if (rowsPack == 1) {
+				this.deleteProducts_pack(pack.getId());
+				saveProductPack(pack.getId(), pack.getIds());
+				return true;
+				
+			}else return false;
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
+
+	public boolean saveProductPack(Integer idPack, List<Integer> idProducts){
+		String sql= "INSERT INTO productes_pack VALUES(?,?)";
+		PreparedStatement stmt = null;
+		int savedProductsInPack = 0;
+		
+
+		try {    
+			for (Integer idProduct : idProducts) {
+				stmt = conexionBD.prepareStatement(sql);
+				int i = 1;
+				stmt.setInt(i++, idPack);
+				stmt.setInt(i++, idProduct);
+				savedProductsInPack += stmt.executeUpdate();
+
+			}
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+
+		if (savedProductsInPack==idProducts.size()) return true;
+		else return false;
+
+	}
+
+    public boolean deleteProducte(Integer id){
+		try {
+			String sql = "";
+			PreparedStatement stmt = null;
+			if (this.findProducte(id) != null){
+				sql = "DELETE FROM productes WHERE id = ?";
+				stmt = conexionBD.prepareStatement(sql);
+				int i = 1;
+				stmt.setInt(i++, id);
 			}
 			int rows = stmt.executeUpdate();
 			if (rows == 1) return true;
@@ -78,104 +204,168 @@ public class ProductesDAO{
 		return false;
 	}
 
+	public boolean deletePack(Integer id){
+		try {
+			String sql = "";
+			PreparedStatement stmt = null;
+			if (this.findPack(id) != null){
+				sql = "DELETE FROM pack WHERE id = ?";
+				stmt = conexionBD.prepareStatement(sql);
+				int i = 1;
+				stmt.setInt(i++, id);
+			}
+			int rows = stmt.executeUpdate();
+			if (rows == 1) return true;
+			else return false;
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
 
-    @Override
-    public Product add(Product p) {
-        if (p!=null) {
-            map.put(p.getId(),p);
-            return p;
-        } else {
-            return null;
-        }
+	public boolean deleteProducts_pack(Integer idPack){
+		try {
+			String sql = "";
+			PreparedStatement stmt = null;
+			
+			sql = "DELETE FROM productes_pack WHERE id_pack = ?";
+			stmt = conexionBD.prepareStatement(sql);
+			int i = 1;
+			stmt.setInt(i++, idPack);
+			
+			int rows = stmt.executeUpdate();
+			if (rows == 1) return true;
+			else return false;
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
+
+    public Productes findProducte(Integer id){
+		if (id == null || id == 0){
+			return null;
+		}
+
+		Productes p = null;
+		try (PreparedStatement stmt = conexionBD.prepareStatement("SELECT * FROM productes WHERE id = ?")){
+			stmt.setInt(1, id); //informem el primer paràmetre de la consulta amb ?
+			ResultSet result = stmt.executeQuery();
+			if (result.next()) {
+				p = new Productes(
+                    result.getInt("id"), 
+                    result.getString("nombre"), 
+                    result.getFloat("precio"),
+                    result.getInt("stock"),
+                    result.getDate("fecha_inicial_catalogo").toLocalDate(),
+                    result.getDate("fecha_final_catalogo").toLocalDate()
+                );
+
+				p.imprimir();
+			}	
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+
+		return p;
+	}
+
+	public Pack findPack(Integer id){
+		if (id == null || id == 0){
+			return null;
+		}
+
+		Pack p = null;
+		ResultSet resultPack = null;
+
+		try (PreparedStatement stmt = conexionBD.prepareStatement("SELECT * FROM pack WHERE id = "+id)){
+			resultPack = stmt.executeQuery();
+
+			if (resultPack.next()) {
+				List<Integer> ids = findProductes_pack(id);
+				if (ids!=null) {
+					p = new Pack(
+						resultPack.getInt("id"), 
+						resultPack.getString("nombre"), 
+						resultPack.getFloat("precio"),
+						resultPack.getInt("stock"),
+						resultPack.getDate("fecha_inicial_catalogo").toLocalDate(),
+						resultPack.getDate("fecha_final_catalogo").toLocalDate(),
+						ids,
+						resultPack.getInt("dto")
+					);
+					p.imprimir();
+				}
+				
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+
+		return p;
+	}
+
+	public List<Integer> findProductes_pack(Integer idPack){
+		List<Integer> ids = new ArrayList<Integer>();
+		ResultSet resultProductesPack;
+
+		try (PreparedStatement stmt = conexionBD.prepareStatement("SELECT * FROM productes_pack WHERE id_pack = ?")){
+			stmt.setInt(1, idPack); //informem el primer paràmetre de la consulta amb ?
+			resultProductesPack = stmt.executeQuery();
+
+			while(resultProductesPack.next()){
+				ids.add(resultProductesPack.getInt("id_producte"));
+			}
+
+		}catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+
+		return ids;
+	}
+
+    public boolean isPack(Integer id){
+		boolean isPack = false;
+        if (id == null || id == 0){
+			isPack = false;
+		}
+
+		try (PreparedStatement stmt = conexionBD.prepareStatement("SELECT * FROM pack WHERE id = ?")){
+			stmt.setInt(1, id); //informem el primer paràmetre de la consulta amb ?
+			ResultSet result = stmt.executeQuery();
+			if (result.next()) isPack = true;
+			else isPack = false;
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return isPack;
     }
-
-    @Override
-    public Product search(Integer id) {
-        return map.get(id);
-    }
-
-    @Override
-    public Product delete(Integer id) {
-        return map.remove(id);
-    }
-
     
+    public void showAll(){
+		try (ResultSet result = conexionBD.createStatement().executeQuery("SELECT * FROM productes")) {
+			while (result.next()) {
+				Productes p = new Productes(
+                    result.getInt("id"), 
+                    result.getString("nombre"), 
+                    result.getFloat("precio"),
+                    result.getInt("stock"),
+                    result.getDate("fecha_inicial_catalogo").toLocalDate(),
+                    result.getDate("fecha_final_catalogo").toLocalDate()
+                );
+				p.imprimir();
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+	}
 
-    @Override
-    public HashMap<Integer, Product> getMap() {
-        return this.map;
-    }
-    
-    public boolean existObj(Integer id){
-        return map.containsKey(id);
-    }
+	public String getListproductsString(List<Integer> listIds){
+		String resultado = "";
 
-    public ArrayList showDiscontinued(LocalDate date){
-        ArrayList discontinuedProducts = new ArrayList<>();
+		for (Integer id : listIds) {
+			resultado+= id+",";
+		}
 
-        for (Product product : this.map.values()) {
-            if(product.getEndCatalogDate().compareTo(date) == 0){
-                discontinuedProducts.add("El producto "+product.getName()+" se va a descatalogar hoy");
-            }else if(product.getEndCatalogDate().compareTo(date) < 0){
-                long days = ChronoUnit.DAYS.between(product.getEndCatalogDate(),date);
-                discontinuedProducts.add("El producto "+product.getName()+" lleva "+days+" dias descatalogado");
-            }
-        }
-        
-        return discontinuedProducts;
-    }
-
-    public void save(){
-        System.out.println("---------------------");
-        System.out.println("Guardando archivos...");
-        System.out.println("---------------------\n");
-
-        try {
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("products.dat"));
-            oos.writeObject(this.map); 
-            oos.close();
-            
-        } catch (Exception e) {
-            System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXX");
-            System.out.println("Fallo al guardar el archivo");
-            System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXX\n");
-            e.printStackTrace();
-        }
-        System.out.println("------------------");
-        System.out.println("Archivos guardados");
-        System.out.println("------------------\n");
-    }
-
-    public void load(){
-        System.out.println("--------------------");
-        System.out.println("Cargando archivos...");
-        System.out.println("--------------------\n");
-        try {
-            ObjectInputStream ois = new ObjectInputStream(new FileInputStream("products.dat"));
-            try {   
-                this.map = (HashMap<Integer,Product>)ois.readObject();
-                ois.close();
-            } catch (Exception e) {
-                System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXX");
-                System.out.println("Fallo al cargar el archivo");
-                System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXX\n");
-
-                e.printStackTrace();
-            }
-            System.out.println("-----------------");
-            System.out.println("Archivos cargados");
-            System.out.println("-----------------\n");
-
-        } catch (Exception e) {
-            System.out.println("XXXXXXXXXXXXXXXXXXXX");
-            System.out.println("El archivo no existe");
-            System.out.println("XXXXXXXXXXXXXXXXXXXX\n");
-        }
-        
-            
-        
-
-
-        
-    }
+		return resultado;
+	}
 }

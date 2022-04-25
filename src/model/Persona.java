@@ -10,6 +10,7 @@ public class Persona implements Serializable {
 	private String apellidos;
 	private String email;
 	private String telefon;
+	private Direccion direccion;
 
 	public Persona() {
 		this.id = 0;
@@ -17,6 +18,7 @@ public class Persona implements Serializable {
 		this.apellidos = "";
 		this.email = "";
 		this.telefon = "";
+		this.direccion = null;
 	}
 	
 	public Persona(int id, String nom, String apellidos, String email, String telefon) {

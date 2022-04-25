@@ -16,32 +16,32 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
-public class IniciBotonsController extends Application {
+public class IniciMenuController extends Application {
 	private Connection conexionBD;
 
 	@FXML
     private BorderPane borderPane;
 
-	public void IniciMenuController() {
+	public IniciMenuController(){
+		System.out.println("conexionBD");
 		try{
 			//Establir la connexio amb la BD
 			String urlBaseDades = "jdbc:postgresql://localhost/postgres";
 			String usuari = "postgres";
 			String contrasenya = "root";
 			conexionBD = DriverManager.getConnection(urlBaseDades , usuari, contrasenya);
-
+			
+			System.out.println(conexionBD);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 	}
 
-	
-
 	@Override
 	public void start(Stage primaryStage) throws IOException {
 
 		//Carrega el fitxer amb la interficie d'usuari inicial (Scene)
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/IniciBotonsView.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/IniciMenuView.fxml"));
 		Scene fm_inici = new Scene(loader.load());
 
 		//Li assigna la escena a la finestra inicial (primaryStage) i la mostra
@@ -66,9 +66,9 @@ public class IniciBotonsController extends Application {
 	}
 
 	@FXML
-	private void onActionMenuItemProductos(ActionEvent event) throws Exception {
+	private void onActionMenuItemProductes(ActionEvent event) throws Exception {
 		//Carrega el fitxer amb la interficie d'usuari
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/PersonesView.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/ProductsView.fxml"));
 		Pane panell = (AnchorPane)loader.load();
 
 		//Crear un objecte de la clase PersonasController ja que necessitarem accedir al mÃ¨todes d'aquesta classe

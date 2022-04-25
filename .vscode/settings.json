@@ -1,0 +1,15 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\controlsfx-8.40.14.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\javafx.base.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\javafx.controls.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\javafx.fxml.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\javafx.graphics.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\javafx.media.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\javafx.swing.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\javafx.web.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\javafx-swt.jar",
+        "c:\\Users\\oscar\\Documents\\javafx-sdk-17.0.2\\lib\\postgresql-42.3.4.jar"
+    ]
+}
