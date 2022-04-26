@@ -4,8 +4,9 @@ import java.sql.SQLData;
 import java.sql.SQLException;
 import java.sql.SQLInput;
 import java.sql.SQLOutput;
+import java.sql.SQLType;
 
-public class Direccion implements SQLData {
+public class Direccion implements SQLType {
     private String localidad;
     private String provincia;
     private String cod_postal;
@@ -62,5 +63,23 @@ public class Direccion implements SQLData {
 
     public void setDomicilio(String domicilio) {
         this.domicilio = domicilio;
+    }
+
+    @Override
+    public String getName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getVendor() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Integer getVendorTypeNumber() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -1,6 +1,7 @@
 package model;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,11 +27,13 @@ public class PersonesDAO {
 				personesList.add(
 					new Persona(
 						result.getInt("id"), 
-						result.getString("nom"), 
+						result.getString("dni"), 
+						result.getString("nombre"), 
 						result.getString("apellidos"),
+						result.getDate("fecha_nacimiento").toLocalDate(),
 						result.getString("email"),
-						result.getString("telefon"),
-						result.getString("direccion")
+						result.getArray("telefonos"),
+						null
 					)
 				);
 			}
@@ -45,24 +48,32 @@ public class PersonesDAO {
 			String sql = "";
 			PreparedStatement stmt = null;
 			if (this.find(persona.getId()) == null){
-				sql = "INSERT INTO persones VALUES(?,?,?,?,?)";
+				sql = "INSERT INTO persones VALUES(?,?,?,?, ?,?,?,null)";
 				stmt = conexionBD.prepareStatement(sql);
 				int i = 1;
 				stmt.setInt(i++, persona.getId());
+				stmt.setString(i++, persona.getDni());
 				stmt.setString(i++, persona.getNom());
 				stmt.setString(i++, persona.getApellidos());
+				stmt.setDate(i++, Date.valueOf(persona.getFecha_nacimiento()));
 				stmt.setString(i++, persona.getEmail());
-				stmt.setString(i++, persona.getTelefon());
+				stmt.setArray(i++, null);	//telefonos
+				//stmt.setObject(parameterIndex, x, targetSqlType); //direccion
 			} else{
-				sql = "UPDATE persones SET nom=?,apellidos=?,email=?,telefon=? WHERE id = ?";
+				sql = "UPDATE persones SET dni=?,nom=?,apellidos=?,fecha_nacimiento=?,email=?,telefonos=?,direccion=null WHERE id = ?";
 				stmt = conexionBD.prepareStatement(sql);
 				int i = 1;
+				stmt.setString(i++, persona.getDni());
 				stmt.setString(i++, persona.getNom());
 				stmt.setString(i++, persona.getApellidos());
+				stmt.setDate(i++, Date.valueOf(persona.getFecha_nacimiento()));
 				stmt.setString(i++, persona.getEmail());
-				stmt.setString(i++, persona.getTelefon());
+				stmt.setArray(i++, null);	//telefonos
+				//stmt.setObject(parameterIndex, x, targetSqlType); //direccion
+
 				stmt.setInt(i++, persona.getId());
 			}
+
 			int rows = stmt.executeUpdate();
 			if (rows == 1) return true;
 			else return false;
@@ -101,7 +112,17 @@ public class PersonesDAO {
 			stmt.setInt(1, id); //informem el primer paràmetre de la consulta amb ?
 			ResultSet result = stmt.executeQuery();
 			if (result.next()) {
-				p = new Persona(result.getInt("id"), result.getString("nom"), result.getString("apellidos"),result.getString("email"),result.getString("telefon"));
+				p = new Persona(
+					result.getInt("id"),
+					result.getString("dni"),
+					result.getString("nombre"), 
+					result.getString("apellidos"),
+
+					result.getDate("fecha_nacimiento").toLocalDate(),
+					result.getString("email"),
+					result.getArray("telefonos"),//telefonos
+					null //direccion
+				);
 				p.imprimir();
 			}	
 		} catch (SQLException e) {
@@ -114,7 +135,17 @@ public class PersonesDAO {
 	public void showAll(){
 		try (ResultSet result = conexionBD.createStatement().executeQuery("SELECT * FROM persones")) {
 			while (result.next()) {
-				Persona p = new Persona(result.getInt("id"), result.getString("nom"), result.getString("apellidos"),result.getString("email"),result.getString("telefon"));
+				Persona p = new Persona(
+					result.getInt("id"),
+					result.getString("dni"),
+					result.getString("nombre"), 
+					result.getString("apellidos"),
+
+					result.getDate("fecha_nacimiento").toLocalDate(),
+					result.getString("email"),
+					result.getArray("telefonos"), //telefonos
+					null //direccion
+				);
 				p.imprimir();
 			}
 		} catch (SQLException e) {

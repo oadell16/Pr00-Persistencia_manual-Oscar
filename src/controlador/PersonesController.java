@@ -1,6 +1,7 @@
 package controlador;
 
 import java.io.IOException;
+import java.sql.Array;
 import java.sql.Connection;
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Alert.AlertType;
@@ -43,10 +45,14 @@ public class PersonesController{
 	private AnchorPane anchorPane;
 	private Stage ventana;
 	@FXML private TextField idTextField;
+	@FXML private TextField dniTextField;
 	@FXML private TextField nomTextField;
 	@FXML private TextField cognomsTextField;
+	@FXML private DatePicker fechaNacimientoDatePicker;
 	@FXML private TextField emailTextField;
 	@FXML private TextField telefonTextField;
+	@FXML private TextField direccionTextField;
+
 	@FXML private TableView<Persona> personesTable;
 	@FXML private TableColumn<Persona, Integer> idColumn;
 	@FXML private TableColumn<Persona, String> nomColumn;
@@ -107,21 +113,34 @@ public class PersonesController{
 	}
 	 
 	@FXML private void onActionGuardar(ActionEvent e) throws IOException {
+		String telefonosTemp[] = telefonTextField.getText().split(",");
+		Array telefonos = null;
 		//verificar si les dades són vàlides
 		if(isDatosValidos()){
 			if(nouRegistre){
-				persona = new Persona(Integer.parseInt(idTextField.getText()), nomTextField.getText(), cognomsTextField.getText(),
-						emailTextField.getText(), telefonTextField.getText());
+				persona = new Persona(
+					Integer.parseInt(idTextField.getText()), 
+					dniTextField.getText(), 
+					nomTextField.getText(), 
+					cognomsTextField.getText(),
+					fechaNacimientoDatePicker.getValue(),
+					emailTextField.getText(), 
+					telefonos,
+					null
+				);
 
 				personesData.add(persona);
 			}else{
 				//modificació registre existent
 				persona = personesTable.getSelectionModel().getSelectedItem();
 
+				persona.setDni(dniTextField.getText()); 
 				persona.setNom(nomTextField.getText()); 
 				persona.setApellidos(cognomsTextField.getText()); 
+				persona.setFecha_nacimiento(fechaNacimientoDatePicker.getValue()); 
 				persona.setEmail(emailTextField.getText()); 
-				persona.setTelefon(telefonTextField.getText()); 
+				persona.setTelefonos(telefonos);
+				persona.setDireccion(null);
 			}
 			personesDAO.save(persona);
 			limpiarFormulario();
@@ -187,23 +206,29 @@ public class PersonesController{
 			nomTextField.setText(persona.getNom());
 			cognomsTextField.setText(persona.getApellidos());
 			emailTextField.setText(persona.getEmail());
-			telefonTextField.setText(persona.getTelefon());
+			telefonTextField.setText(persona.getTelefonos().toString());
 		}else{ 
 			//nou registre
 			nouRegistre = true;
 			//idTextField.setText(""); no hem de netejar la PK perquè l'usuari ha posat un valor
+			dniTextField.setText("");
 			nomTextField.setText("");
 			cognomsTextField.setText("");
+			fechaNacimientoDatePicker.setValue(null);
 			emailTextField.setText("");
 			telefonTextField.setText("");
+			direccionTextField.setText("");
 		}
 	}
 	
 	private void limpiarFormulario(){
 		idTextField.setText("");
+		dniTextField.setText("");
 		nomTextField.setText("");
 		cognomsTextField.setText("");
+		fechaNacimientoDatePicker.setValue(null);
 		emailTextField.setText("");
 		telefonTextField.setText("");
+		direccionTextField.setText("");
 	}
 }

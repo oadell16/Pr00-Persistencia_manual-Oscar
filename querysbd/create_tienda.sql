@@ -50,8 +50,8 @@ CREATE TABLE persona(
 	apellidos VARCHAR(40) NOT NULL,
     fecha_nacimiento DATE NOT NULL,
     email VARCHAR(50) NOT NULL,
-    telefonos VARCHAR(15) ARRAY NOT NULL,
-	direccion tipo_direccion NOT NULL
+    telefonos VARCHAR(15) ARRAY NULL,
+	direccion tipo_direccion NULL
 );
 
 CREATE TABLE provedor(
