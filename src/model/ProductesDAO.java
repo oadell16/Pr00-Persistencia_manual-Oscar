@@ -186,14 +186,16 @@ public class ProductesDAO{
 	}
 
     public boolean deleteProducte(Integer id){
+		int rows = 0;
+		String sql = "";
+		PreparedStatement stmt = null;
+
 		try {
-			String sql = "";
-			PreparedStatement stmt = null;
 			if (this.findProducte(id) != null){
 				sql = "DELETE FROM productes WHERE id = "+id;
 				stmt = conexionBD.prepareStatement(sql);
 			}
-			int rows = stmt.executeUpdate();
+			rows = stmt.executeUpdate();
 			if (rows == 1) return true;
 			else return false;
 		} catch (SQLException e) {
@@ -203,20 +205,19 @@ public class ProductesDAO{
 	}
 
 	public boolean deletePack(Integer id){
+		int rows = 0;
+		String sql = "";
+		PreparedStatement stmt = null;
 		try {
-			String sql = "";
-			PreparedStatement stmt = null;
-			if (this.findPack(id) != null){
+			if (this.findPack(id) != null) {
 				sql = "DELETE FROM pack WHERE id = "+id;
 				stmt = conexionBD.prepareStatement(sql);
+				
 			}
-			int rows = stmt.executeUpdate();
-			if (rows == 1) {
-				sql = "DELETE FROM productes_pack WHERE id_pack = "+id;
-				stmt = conexionBD.prepareStatement(sql);
-				stmt.executeUpdate();
-			return true;
-			}else return false;
+			rows = stmt.executeUpdate();
+			if (rows == 1) return true;
+			else return false;
+
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
@@ -224,16 +225,15 @@ public class ProductesDAO{
 	}
 
 	public boolean deleteProducts_pack(Integer idPack){
+		int rows = 0;
+		String sql = "";
+		PreparedStatement stmt = null;
 		try {
-			String sql = "";
-			PreparedStatement stmt = null;
-			
-			sql = "DELETE FROM productes_pack WHERE id_pack = ?";
-			stmt = conexionBD.prepareStatement(sql);
-			int i = 1;
-			stmt.setInt(i++, idPack);
-			
-			int rows = stmt.executeUpdate();
+			if (this.findProductes_pack(idPack) != null) {
+				sql = "DELETE FROM productes_pack WHERE id_pack = "+idPack;
+				stmt = conexionBD.prepareStatement(sql);
+			}
+			rows = stmt.executeUpdate();
 			if (rows == 1) return true;
 			else return false;
 		} catch (SQLException e) {
@@ -367,5 +367,25 @@ public class ProductesDAO{
 		}
 
 		return resultado;
+	}
+
+	public List<Integer> getIdPacksFromProductId(Integer productId){
+		String sql = "";
+		PreparedStatement stmt = null;
+		List<Integer> idsPacks = new ArrayList<Integer>();
+		try {
+			if (this.findProducte(productId) != null){
+				//seleccionar el id de los packs que contengan ese producto
+				ResultSet result = conexionBD.createStatement().executeQuery("SELECT id_pack FROM productes_pack WHERE id_producte = "+productId);
+				
+				while (result.next()) {
+					idsPacks.add(result.getInt("id_pack"));
+				}
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+
+		return idsPacks;
 	}
 }

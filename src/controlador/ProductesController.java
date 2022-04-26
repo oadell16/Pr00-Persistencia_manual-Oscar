@@ -230,19 +230,37 @@ public class ProductesController{
 			Optional<ButtonType> result = alert.showAndWait();
 			if (result.get() == ButtonType.OK) {
 				if (!productesDAO.isPack(Integer.parseInt(idTextField.getText()))) {
+					List<Integer> packsId = productesDAO.getIdPacksFromProductId(Integer.parseInt(idTextField.getText()));
+
+					for (Integer idPack : packsId) {
+						productesDAO.deleteProducts_pack(idPack);
+					}
+
+					for (Integer idPack : packsId) {
+						productesDAO.deletePack(idPack);
+							
+						
+						
+					}
+
 					if(productesDAO.deleteProducte(Integer.parseInt(idTextField.getText()))){ 
 						productesData.remove(productesTable.getSelectionModel().getSelectedIndex());
-	
+						productesData = FXCollections.observableList(productesDAO.getProductesList());
+						productesTable.setItems(productesData);
 						limpiarFormulario();
 						// productesDAO.showAll();
 					}
 				} else {
-					if(productesDAO.deletePack(Integer.parseInt(idTextField.getText()))){ 
-						productesData.remove(productesTable.getSelectionModel().getSelectedIndex());
-	
-						limpiarFormulario();
-						// productesDAO.showAll();
+					if(productesDAO.findProductes_pack(Integer.parseInt(idTextField.getText()))!=null){
+						productesDAO.deleteProducts_pack(Integer.parseInt(idTextField.getText()));
 					}
+
+					productesDAO.deletePack(Integer.parseInt(idTextField.getText()));
+					productesData.remove(productesTable.getSelectionModel().getSelectedIndex());
+
+					limpiarFormulario();
+					// productesDAO.showAll();
+					
 				}
 				
 			}

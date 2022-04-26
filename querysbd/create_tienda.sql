@@ -9,7 +9,7 @@ drop table if exists asistencia;
 
 CREATE TABLE productes(
 	id SERIAL PRIMARY KEY,
-	nombre VARCHAR(20) NOT NULL,
+	nombre VARCHAR(30) NOT NULL,
 	precio DECIMAL(5,2) NOT NULL,
     stock INTEGER NOT NULL,
     fecha_inicial_catalogo DATE NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE productes_pack(
     CONSTRAINT fk_id_producte  FOREIGN KEY(id_producte) REFERENCES productes(id)
 );
 
-CREATE TYPE tipo_direccion AS(
+CREATE TYPE direccion AS(
 	localidad VARCHAR(30),
     provincia VARCHAR(30),
     cod_postal VARCHAR(5),
