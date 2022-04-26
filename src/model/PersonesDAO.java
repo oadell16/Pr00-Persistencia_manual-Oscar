@@ -1,5 +1,6 @@
 package model;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -34,6 +35,7 @@ public class PersonesDAO {
 						result.getString("email"),
 						result.getArray("telefonos"),
 						null
+						// result.getObject("direccion", ) 
 					)
 				);
 			}
@@ -151,6 +153,17 @@ public class PersonesDAO {
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
+	}
+
+	public Array getArrayTelefonos(String telefonos){
+		String[] telefonosTemp = telefonos.split(",");
+		Array telefonosArray = null;
+		try {
+			telefonosArray = conexionBD.createArrayOf("VARCHAR", telefonosTemp);
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return telefonosArray;
 	}
 }
 

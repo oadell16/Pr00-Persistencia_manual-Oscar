@@ -17,22 +17,6 @@ public class Direccion implements SQLType {
         return sql_type;
     }
 
-    public void readSQL(SQLInput stream, String type) throws SQLException {
-        sql_type = type;
-        localidad = stream.readString();
-        provincia = stream.readString();
-        cod_postal = stream.readString();
-        domicilio = stream.readString();
-    }
-
-    public void writeSQL(SQLOutput stream)
-        throws SQLException {
-        stream.writeString(localidad);
-        stream.writeString(provincia);
-        stream.writeString(cod_postal);
-        stream.writeString(domicilio);
-    }
-
     public String getLocalidad() {
         return localidad;
     }
@@ -67,14 +51,12 @@ public class Direccion implements SQLType {
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
-        return null;
+        return "Direccion";
     }
 
     @Override
     public String getVendor() {
-        // TODO Auto-generated method stub
-        return null;
+        return "provincia = "+this.provincia+", localidad = "+this.localidad+", cod_postal = "+this.cod_postal+", domicilio = "+this.domicilio;
     }
 
     @Override

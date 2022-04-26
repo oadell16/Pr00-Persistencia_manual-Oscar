@@ -104,9 +104,17 @@ public class Persona implements Serializable {
 	
 	public void imprimir(){
 		System.out.println("Id: " + id);
+		System.out.println("DNI: " + dni);
 		System.out.println("Nom: " + nom);
 		System.out.println("Apellidos: " + apellidos);
+		System.out.println("Fecha nacimiento: " + fecha_nacimiento);
 		System.out.println("E-mail: " + email);
 		System.out.println("Telèfon: " + telefonos);
+		System.out.println("Direccion");
+		System.out.println("Provincia: " + direccion.getProvincia());
+		System.out.println("Localidad: " + direccion.getLocalidad());
+		System.out.println("Cod postal: " + direccion.getCod_postal());
+		System.out.println("Domicilio: " + direccion.getDomicilio());
+
 	}
 }

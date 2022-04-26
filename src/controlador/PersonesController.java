@@ -3,6 +3,8 @@ package controlador;
 import java.io.IOException;
 import java.sql.Array;
 import java.sql.Connection;
+import java.sql.Date;
+import java.sql.SQLException;
 import java.util.Optional;
 
 import org.controlsfx.validation.Severity;
@@ -51,7 +53,11 @@ public class PersonesController{
 	@FXML private DatePicker fechaNacimientoDatePicker;
 	@FXML private TextField emailTextField;
 	@FXML private TextField telefonTextField;
-	@FXML private TextField direccionTextField;
+	//direccion
+	@FXML private TextField localidadTextField;
+	@FXML private TextField provinciaTextField;
+	@FXML private TextField codPostalTextField;
+	@FXML private TextField domicilioTextField;
 
 	@FXML private TableView<Persona> personesTable;
 	@FXML private TableColumn<Persona, Integer> idColumn;
@@ -86,11 +92,19 @@ public class PersonesController{
 		//produeix error si no posem a les VM arguments això: --add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED
 		vs = new ValidationSupport();
 		vs.registerValidator(idTextField, true, Validator.createEmptyValidator("ID obligatori"));
+		vs.registerValidator(dniTextField, true, Validator.createEmptyValidator("Dni obligatori"));
 		vs.registerValidator(nomTextField, true, Validator.createEmptyValidator("Nom obligatori"));
 		vs.registerValidator(cognomsTextField, true, Validator.createEmptyValidator("Cognoms obligatori"));
+		vs.registerValidator(fechaNacimientoDatePicker, true, Validator.createEmptyValidator("Data de naixement obligatori"));
         //https://howtodoinjava.com/regex/java-regex-validate-email-address/
         vs.registerValidator(emailTextField, Validator.createRegexValidator("E-mail incorrecte", "^(.+)@(.+)$", Severity.ERROR));
         vs.registerValidator(telefonTextField, Validator.createRegexValidator("Telèfon ha de ser un número", "\\d*", Severity.ERROR));
+
+		//direccion
+		vs.registerValidator(localidadTextField, true, Validator.createEmptyValidator("Localitat es obligatori"));
+		vs.registerValidator(provinciaTextField, true, Validator.createEmptyValidator("Provincia es obligatori"));
+		vs.registerValidator(codPostalTextField, true, Validator.createEmptyValidator("Codi postal es obligatori"));
+		vs.registerValidator(domicilioTextField, true, Validator.createEmptyValidator("Domicili es obligatori"));
 	}
 
 	public Stage getVentana() {
@@ -113,8 +127,7 @@ public class PersonesController{
 	}
 	 
 	@FXML private void onActionGuardar(ActionEvent e) throws IOException {
-		String telefonosTemp[] = telefonTextField.getText().split(",");
-		Array telefonos = null;
+		
 		//verificar si les dades són vàlides
 		if(isDatosValidos()){
 			if(nouRegistre){
@@ -125,7 +138,7 @@ public class PersonesController{
 					cognomsTextField.getText(),
 					fechaNacimientoDatePicker.getValue(),
 					emailTextField.getText(), 
-					telefonos,
+					personesDAO.getArrayTelefonos(telefonTextField.getText()),
 					null
 				);
 
@@ -133,6 +146,7 @@ public class PersonesController{
 			}else{
 				//modificació registre existent
 				persona = personesTable.getSelectionModel().getSelectedItem();
+				Array telefonos = personesDAO.getArrayTelefonos(telefonTextField.getText());
 
 				persona.setDni(dniTextField.getText()); 
 				persona.setNom(nomTextField.getText()); 
@@ -203,10 +217,17 @@ public class PersonesController{
 			//llegir persona (posar els valors als controls per modificar-los)
 			nouRegistre = false;
 			idTextField.setText(String.valueOf(persona.getId()));
+			idTextField.setText(persona.getDni());
 			nomTextField.setText(persona.getNom());
 			cognomsTextField.setText(persona.getApellidos());
+			fechaNacimientoDatePicker.setValue(persona.getFecha_nacimiento());
 			emailTextField.setText(persona.getEmail());
 			telefonTextField.setText(persona.getTelefonos().toString());
+			//direccion
+			provinciaTextField.setText("");
+			localidadTextField.setText("");
+			codPostalTextField.setText("");
+			domicilioTextField.setText("");
 		}else{ 
 			//nou registre
 			nouRegistre = true;
@@ -217,7 +238,11 @@ public class PersonesController{
 			fechaNacimientoDatePicker.setValue(null);
 			emailTextField.setText("");
 			telefonTextField.setText("");
-			direccionTextField.setText("");
+			//direccion
+			provinciaTextField.setText("");
+			localidadTextField.setText("");
+			codPostalTextField.setText("");
+			domicilioTextField.setText("");
 		}
 	}
 	
@@ -229,6 +254,10 @@ public class PersonesController{
 		fechaNacimientoDatePicker.setValue(null);
 		emailTextField.setText("");
 		telefonTextField.setText("");
-		direccionTextField.setText("");
+		//direccion
+		provinciaTextField.setText("");
+		localidadTextField.setText("");
+		codPostalTextField.setText("");
+		domicilioTextField.setText("");
 	}
 }
