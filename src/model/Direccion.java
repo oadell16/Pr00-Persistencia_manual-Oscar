@@ -6,7 +6,7 @@ import java.sql.SQLInput;
 import java.sql.SQLOutput;
 import java.sql.SQLType;
 
-public class Direccion implements SQLType {
+public class Direccion implements SQLData {
     private String localidad;
     private String provincia;
     private String cod_postal;
@@ -15,6 +15,21 @@ public class Direccion implements SQLType {
 
     public String getSQLTypeName() {
         return sql_type;
+    }
+
+    public void readSQL(SQLInput stream, String type) throws SQLException {
+        sql_type = type;
+        localidad = stream.readString();
+        provincia = stream.readString();
+        cod_postal = stream.readString();
+        domicilio = stream.readString();
+    }
+
+    public void writeSQL(SQLOutput stream) throws SQLException {
+        stream.writeString(localidad);
+        stream.writeString(provincia);
+        stream.writeString(cod_postal);
+        stream.writeString(domicilio);
     }
 
     public String getLocalidad() {
@@ -49,19 +64,4 @@ public class Direccion implements SQLType {
         this.domicilio = domicilio;
     }
 
-    @Override
-    public String getName() {
-        return "Direccion";
-    }
-
-    @Override
-    public String getVendor() {
-        return "provincia = "+this.provincia+", localidad = "+this.localidad+", cod_postal = "+this.cod_postal+", domicilio = "+this.domicilio;
-    }
-
-    @Override
-    public Integer getVendorTypeNumber() {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

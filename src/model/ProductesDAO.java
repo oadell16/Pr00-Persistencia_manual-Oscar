@@ -190,10 +190,8 @@ public class ProductesDAO{
 			String sql = "";
 			PreparedStatement stmt = null;
 			if (this.findProducte(id) != null){
-				sql = "DELETE FROM productes WHERE id = ?";
+				sql = "DELETE FROM productes WHERE id = "+id;
 				stmt = conexionBD.prepareStatement(sql);
-				int i = 1;
-				stmt.setInt(i++, id);
 			}
 			int rows = stmt.executeUpdate();
 			if (rows == 1) return true;
@@ -209,14 +207,16 @@ public class ProductesDAO{
 			String sql = "";
 			PreparedStatement stmt = null;
 			if (this.findPack(id) != null){
-				sql = "DELETE FROM pack WHERE id = ?";
+				sql = "DELETE FROM pack WHERE id = "+id;
 				stmt = conexionBD.prepareStatement(sql);
-				int i = 1;
-				stmt.setInt(i++, id);
 			}
 			int rows = stmt.executeUpdate();
-			if (rows == 1) return true;
-			else return false;
+			if (rows == 1) {
+				sql = "DELETE FROM productes_pack WHERE id_pack = "+id;
+				stmt = conexionBD.prepareStatement(sql);
+				stmt.executeUpdate();
+			return true;
+			}else return false;
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}

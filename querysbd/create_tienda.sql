@@ -1,8 +1,6 @@
 drop table if exists productes_pack;
 drop table if exists pack;
 drop table if exists productes;
-
-drop table if exists telefon_persona;
 drop table if exists cliente;
 drop table if exists proveedor;
 drop table if exists persona;

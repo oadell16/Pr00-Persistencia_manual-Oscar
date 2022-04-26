@@ -229,7 +229,7 @@ public class ProductesController{
 			alert.setHeaderText("Vol esborrar el producte " + idTextField.getText() + "?");
 			Optional<ButtonType> result = alert.showAndWait();
 			if (result.get() == ButtonType.OK) {
-				if (!isCheckedCheckBoxPack()) {
+				if (!productesDAO.isPack(Integer.parseInt(idTextField.getText()))) {
 					if(productesDAO.deleteProducte(Integer.parseInt(idTextField.getText()))){ 
 						productesData.remove(productesTable.getSelectionModel().getSelectedIndex());
 	
