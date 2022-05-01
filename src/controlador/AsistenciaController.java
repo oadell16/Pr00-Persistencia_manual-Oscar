@@ -5,7 +5,9 @@ import java.sql.Array;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Optional;
 
 import org.controlsfx.validation.Severity;
@@ -28,7 +30,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import model.Asistencia;
 import model.AsistenciaDAO;
@@ -64,13 +65,12 @@ public class AsistenciaController{
 	public void setConexionBD(Connection conexionBD) {	
 		//Crear objecte DAO de asistencia
 		asistenciaDAO = new AsistenciaDAO(conexionBD);
-		
 		// Aprofitar per carregar la taula de asistencia (no ho podem fer al initialize() perque encara no tenim l'objecte conexionBD)
 		// https://code.makery.ch/es/library/javafx-tutorial/part2/
 		asistenciaData = FXCollections.observableList(asistenciaDAO.getAsistenciaList());
 		asistenciaTable.setItems(asistenciaData);
 	}
-
+	
 	/**
 	 * Inicialitza la classe. JAVA l'executa automàticament després de carregar el fitxer fxml
 	 */
@@ -89,9 +89,7 @@ public class AsistenciaController{
 		vs = new ValidationSupport();
 		vs.registerValidator(idTextField, true, Validator.createEmptyValidator("ID obligatori"));
 		vs.registerValidator(horaEntradaTextField, true, Validator.createEmptyValidator("Hora d'entrada obligatoria"));
-		vs.registerValidator(horaSalidaTextField, true, Validator.createEmptyValidator("Hora de sortida obligatoria"));
 		vs.registerValidator(fechaEntradaDatePicker, true, Validator.createEmptyValidator("Data d'entrada obligatoria"));
-		vs.registerValidator(fechaSalidaDatePicker, true, Validator.createEmptyValidator("Data de sortidaobligatoria"));
 	}
 
 	public Stage getVentana() {
@@ -118,17 +116,38 @@ public class AsistenciaController{
 		//verificar si les dades són vàlides
 		if(isDatosValidos()){
 			if(nouRegistre){
-				asistencia = new Asistencia(
-					Integer.parseInt(idTextField.getText()), 
-					null, 
-					null
-				);
+				LocalDateTime fechaEntrada = LocalDateTime.parse(fechaEntradaDatePicker.getValue().toString()+"T"+horaEntradaTextField.getText());
+
+				if (fechaSalidaDatePicker.getValue()!=null && !horaSalidaTextField.equals("")) {
+					LocalDateTime fechaSalida = LocalDateTime.parse(fechaEntradaDatePicker.getValue().toString()+"T"+horaEntradaTextField.getText());
+					asistencia = new Asistencia(
+						Integer.parseInt(idTextField.getText()), 
+						fechaEntrada, 
+						fechaSalida
+					);
+				} else {
+					asistencia = new Asistencia(
+						Integer.parseInt(idTextField.getText()), 
+						fechaEntrada, 
+						null
+					);
+				}
+				
 				asistenciaData.add(asistencia);
 
 			}else{
 				//modificació registre existent
-				asistencia.setFechaEntrada(null);
-				asistencia.setFechaSalida(null);
+				asistencia = asistenciaTable.getSelectionModel().getSelectedItem();
+				LocalDateTime fechaEntrada = LocalDateTime.parse(fechaEntradaDatePicker.getValue().toString()+"T"+horaEntradaTextField.getText());
+				
+				if (fechaSalidaDatePicker.getValue()!=null && !horaSalidaTextField.equals("")) {
+					LocalDateTime fechaSalida = LocalDateTime.parse(fechaEntradaDatePicker.getValue().toString()+"T"+horaEntradaTextField.getText());
+					asistencia.setFechaEntrada(fechaEntrada);
+					asistencia.setFechaSalida(fechaSalida);
+				} else {
+					asistencia.setFechaEntrada(fechaEntrada);
+					asistencia.setFechaSalida(null);
+				}
 			}
 
 			asistenciaDAO.save(asistencia);
@@ -190,11 +209,30 @@ public class AsistenciaController{
 		if(asistencia != null){ 
 			//llegir asistencia (posar els valors als controls per modificar-los)
 			nouRegistre = false;
+			LocalDateTime fechaEntradaCompleta = asistencia.getFechaEntrada();
+			LocalDateTime fechaSalidaCompleta = asistencia.getFechaSalida();
+			
+			//partir fechaEntradaCompleta en fecha y hora
+			LocalDate fechaEntrada = fechaEntradaCompleta.toLocalDate();
+			LocalTime horaEntrada = fechaEntradaCompleta.toLocalTime();
+			
+			//Mostrar la fecha de entrada
 			idTextField.setText(String.valueOf(asistencia.getId()));
-			fechaEntradaDatePicker.setValue(null);
-			horaEntradaTextField.setText("");
-			fechaSalidaDatePicker.setValue(null);
-			horaSalidaTextField.setText("");
+			fechaEntradaDatePicker.setValue(fechaEntrada);
+			horaEntradaTextField.setText(horaEntrada.toString());
+
+			//Si la fecha de salida no es nula parte la fecha salida completa y la muestra
+			if (fechaSalidaCompleta!=null) {
+				LocalDate fechaSalida = fechaSalidaCompleta.toLocalDate();
+				LocalTime horaSalida = fechaSalidaCompleta.toLocalTime();
+
+				fechaSalidaDatePicker.setValue(fechaSalida);
+				horaSalidaTextField.setText(horaSalida.toString());
+			} else {
+				fechaSalidaDatePicker.setValue(null);
+				horaSalidaTextField.setText("");
+			}
+			
 
 		}else{ 
 			//nou registre

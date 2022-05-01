@@ -6,6 +6,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,18 +30,27 @@ public class AsistenciaDAO {
 		try (ResultSet result = conexionBD.createStatement().executeQuery("SELECT * FROM asistencia")) {
 			while (result.next()) {
 				try{
-					Long fecha_entradaLong = result.getDate("fecha_entrada").getTime();
-					Long fecha_salidaLong = result.getDate("fecha_salida").getTime();
-					LocalDateTime fecha_entrada = LocalDateTime.ofInstant(Instant.ofEpochSecond(fecha_entradaLong),TimeZone.getDefault().toZoneId());
-					LocalDateTime fecha_salida = LocalDateTime.ofInstant(Instant.ofEpochSecond(fecha_salidaLong),TimeZone.getDefault().toZoneId());
+					LocalDateTime fecha_entrada = result.getTimestamp("fecha_entrada").toLocalDateTime();
 
-					asistenciaList.add(
-						new Asistencia(
-							result.getInt("id"), 
-							fecha_entrada,
-							fecha_salida
-						)
-					);
+					if (result.getDate("fecha_salida")!=null) {
+						LocalDateTime fecha_salida = result.getTimestamp("fecha_salida").toLocalDateTime();
+
+						asistenciaList.add(
+							new Asistencia(
+								result.getInt("id"),
+								fecha_entrada,
+								fecha_salida
+							)
+						);
+					}else{
+						asistenciaList.add(
+							new Asistencia(
+								result.getInt("id"),
+								fecha_entrada,
+								null
+							)
+						);
+					}
 		
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
@@ -62,16 +72,15 @@ public class AsistenciaDAO {
 				stmt = conexionBD.prepareStatement(sql);
 				int i = 1;
 				stmt.setInt(i++, asistencia.getId());
-				// stmt.set(i++, asistencia.getFechaEntrada());
-				// stmt.setString(i++, asistencia.getFechaSalida());
+				stmt.setTimestamp(i++, Timestamp.valueOf(asistencia.getFechaEntrada()));
+				stmt.setTimestamp(i++, Timestamp.valueOf(asistencia.getFechaSalida()));
 
 			} else{
 				sql = "UPDATE asistencia SET fecha_entrada=?,fecha_salida=? WHERE id = "+asistencia.getId();
 				stmt = conexionBD.prepareStatement(sql);
 				int i = 1;
-				stmt.setInt(i++, asistencia.getId());
-				// stmt.set(i++, asistencia.getFechaEntrada());
-				// stmt.setString(i++, asistencia.getFechaSalida());
+				stmt.setTimestamp(i++, Timestamp.valueOf(asistencia.getFechaEntrada()));
+				stmt.setTimestamp(i++, Timestamp.valueOf(asistencia.getFechaSalida()));
 
 			}
 
@@ -112,11 +121,24 @@ public class AsistenciaDAO {
 		try (PreparedStatement stmt = conexionBD.prepareStatement("SELECT * FROM asistencia WHERE id = "+id)){
 			ResultSet result = stmt.executeQuery();
 			if (result.next()) {
-				a = new Asistencia(
-					result.getInt("id"),
-					null,
-					null
-				);
+				LocalDateTime fecha_entrada = result.getTimestamp("fecha_entrada").toLocalDateTime();
+
+				if (result.getDate("fecha_salida")!=null) {
+					LocalDateTime fecha_salida = result.getTimestamp("fecha_salida").toLocalDateTime();
+
+					a= new Asistencia(
+						result.getInt("id"),
+						fecha_entrada,
+						fecha_salida
+					);
+				}else{
+					a= new Asistencia(
+						result.getInt("id"),
+						fecha_entrada,
+						null
+					);
+				}
+
 				a.imprimir();
 			}	
 		} catch (SQLException e) {
@@ -129,11 +151,25 @@ public class AsistenciaDAO {
 	public void showAll(){
 		try (ResultSet result = conexionBD.createStatement().executeQuery("SELECT * FROM asistencia")) {
 			while (result.next()) {
-				Asistencia a = new Asistencia(
-					result.getInt("id"),
-					null,
-					null
-				);
+				Asistencia a = null;
+				LocalDateTime fecha_entrada = result.getTimestamp("fecha_entrada").toLocalDateTime();
+
+				if (result.getDate("fecha_salida")!=null) {
+					LocalDateTime fecha_salida = result.getTimestamp("fecha_salida").toLocalDateTime();
+
+					a = new Asistencia(
+						result.getInt("id"),
+						fecha_entrada,
+						fecha_salida
+					);
+				}else{
+					a = new Asistencia(
+						result.getInt("id"),
+						fecha_entrada,
+						null
+					);
+				}
+
 				a.imprimir();
 			}
 		} catch (SQLException e) {
