@@ -32,7 +32,7 @@ import model.Direccion;
 import model.Persona;
 import model.PersonesDAO;
 
-public class PersonesController{
+public class AsistenciaController{
 	//Objecte per gestionar la persistència de les dades
 	private PersonesDAO personesDAO;
 	//Objecte per gestionar el objecte actual

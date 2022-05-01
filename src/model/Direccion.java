@@ -6,31 +6,19 @@ import java.sql.SQLInput;
 import java.sql.SQLOutput;
 import java.sql.SQLType;
 
-public class Direccion implements SQLData {
+public class Direccion{
     private String localidad;
     private String provincia;
     private String cod_postal;
+    
+    public Direccion(String localidad, String provincia, String cod_postal, String domicilio) {
+        this.localidad = localidad;
+        this.provincia = provincia;
+        this.cod_postal = cod_postal;
+        this.domicilio = domicilio;
+    }
+
     private String domicilio;
-    private String sql_type;
-
-    public String getSQLTypeName() {
-        return sql_type;
-    }
-
-    public void readSQL(SQLInput stream, String type) throws SQLException {
-        sql_type = type;
-        localidad = stream.readString();
-        provincia = stream.readString();
-        cod_postal = stream.readString();
-        domicilio = stream.readString();
-    }
-
-    public void writeSQL(SQLOutput stream) throws SQLException {
-        stream.writeString(localidad);
-        stream.writeString(provincia);
-        stream.writeString(cod_postal);
-        stream.writeString(domicilio);
-    }
 
     public String getLocalidad() {
         return localidad;
