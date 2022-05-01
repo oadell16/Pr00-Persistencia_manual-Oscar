@@ -15,6 +15,7 @@
           <items>
             <MenuItem mnemonicParsing="false" onAction="#onActionMenuItemPersones" text="Persones" />
             <MenuItem mnemonicParsing="false" onAction="#onActionMenuItemProductes" text="Productes" />
+                  <MenuItem mnemonicParsing="false" onAction="#onActionMenuItemAsistencia" text="Asistencia" />
             <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem mnemonicParsing="false" text="Preferències..." />
             <MenuItem mnemonicParsing="false" onAction="#onActionMenuItemSortir" text="Sortir" />

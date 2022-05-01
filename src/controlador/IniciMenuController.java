@@ -79,6 +79,19 @@ public class IniciMenuController extends Application {
 	}
 
 	@FXML
+	private void onActionMenuItemAsistencia(ActionEvent event) throws Exception {
+		//Carrega el fitxer amb la interficie d'usuari
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/AsistenciaView.fxml"));
+		Pane panell = (AnchorPane)loader.load();
+
+		//Crear un objecte de la clase PersonasController ja que necessitarem accedir al mÃ¨todes d'aquesta classe
+		AsistenciaController asistenciaControler = (AsistenciaController)loader.getController();
+		asistenciaControler.setConexionBD(conexionBD);
+		
+		borderPane.setCenter(panell); 
+	}
+
+	@FXML
 	void onActionMenuItemSortir(ActionEvent event) {
 		Platform.exit();
 	}

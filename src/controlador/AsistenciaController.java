@@ -5,6 +5,7 @@ import java.sql.Array;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.controlsfx.validation.Severity;
@@ -27,84 +28,70 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import model.Direccion;
-import model.Persona;
-import model.PersonesDAO;
+import model.Asistencia;
+import model.AsistenciaDAO;
 
 public class AsistenciaController{
 	//Objecte per gestionar la persistència de les dades
-	private PersonesDAO personesDAO;
+	private AsistenciaDAO asistenciaDAO;
 	//Objecte per gestionar el objecte actual
-	private Persona persona = null;
+	private Asistencia asistencia = null;
 	//indicador de nou registre
 	private boolean nouRegistre = false;
 	//objecte per afegir les files de la taula
-	private ObservableList<Persona> personesData;
+	private ObservableList<Asistencia> asistenciaData;
 
 	//Elements gràfics de la UI
 	@FXML
 	private AnchorPane anchorPane;
 	private Stage ventana;
 	@FXML private TextField idTextField;
-	@FXML private TextField dniTextField;
-	@FXML private TextField nomTextField;
-	@FXML private TextField cognomsTextField;
-	@FXML private DatePicker fechaNacimientoDatePicker;
-	@FXML private TextField emailTextField;
-	@FXML private TextField telefonTextField;
-	//direccion
-	@FXML private TextField localidadTextField;
-	@FXML private TextField provinciaTextField;
-	@FXML private TextField codPostalTextField;
-	@FXML private TextField domicilioTextField;
+	@FXML private DatePicker fechaEntradaDatePicker;
+	@FXML private TextField horaEntradaTextField;
+	@FXML private DatePicker fechaSalidaDatePicker;
+	@FXML private TextField horaSalidaTextField;
 
-	@FXML private TableView<Persona> personesTable;
-	@FXML private TableColumn<Persona, Integer> idColumn;
-	@FXML private TableColumn<Persona, String> nomColumn;
+	@FXML private TableView<Asistencia> asistenciaTable;
+	@FXML private TableColumn<Asistencia, Integer> idColumn;
+	@FXML private TableColumn<Asistencia, LocalDateTime> entradaColumn;
+	@FXML private TableColumn<Asistencia, LocalDateTime> salidaColumn;
 
 	private ValidationSupport vs;
 
 	// Crear conexion a la base de datos
 	public void setConexionBD(Connection conexionBD) {	
-		//Crear objecte DAO de persones
-		personesDAO = new PersonesDAO(conexionBD);
+		//Crear objecte DAO de asistencia
+		asistenciaDAO = new AsistenciaDAO(conexionBD);
 		
-		// Aprofitar per carregar la taula de persones (no ho podem fer al initialize() perque encara no tenim l'objecte conexionBD)
+		// Aprofitar per carregar la taula de asistencia (no ho podem fer al initialize() perque encara no tenim l'objecte conexionBD)
 		// https://code.makery.ch/es/library/javafx-tutorial/part2/
-		personesData = FXCollections.observableList(personesDAO.getPersonesList());
-		personesTable.setItems(personesData);
+		asistenciaData = FXCollections.observableList(asistenciaDAO.getAsistenciaList());
+		asistenciaTable.setItems(asistenciaData);
 	}
 
 	/**
 	 * Inicialitza la classe. JAVA l'executa automàticament després de carregar el fitxer fxml
 	 */
 	@FXML private void initialize() {
-		idColumn.setCellValueFactory(new PropertyValueFactory<Persona,Integer>("id"));
-		nomColumn.setCellValueFactory(new PropertyValueFactory<Persona,String>("nom"));
+		idColumn.setCellValueFactory(new PropertyValueFactory<Asistencia,Integer>("id"));
+		entradaColumn.setCellValueFactory(new PropertyValueFactory<Asistencia,LocalDateTime>("fechaEntrada"));
+		salidaColumn.setCellValueFactory(new PropertyValueFactory<Asistencia,LocalDateTime>("fechaSalida"));
 
 		// Quan l'usuari canvia de linia executem el métode mostrarPersona
-		personesTable.getSelectionModel().selectedItemProperty().addListener(
-				(observable, oldValue, newValue) -> mostrarPersona(newValue));
+		asistenciaTable.getSelectionModel().selectedItemProperty().addListener(
+				(observable, oldValue, newValue) -> mostrarAsistencia(newValue));
 
 		//Validació dades
 		//https://github.com/controlsfx/controlsfx/issues/1148
 		//produeix error si no posem a les VM arguments això: --add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED
 		vs = new ValidationSupport();
 		vs.registerValidator(idTextField, true, Validator.createEmptyValidator("ID obligatori"));
-		vs.registerValidator(dniTextField, true, Validator.createEmptyValidator("Dni obligatori"));
-		vs.registerValidator(nomTextField, true, Validator.createEmptyValidator("Nom obligatori"));
-		vs.registerValidator(cognomsTextField, true, Validator.createEmptyValidator("Cognoms obligatori"));
-		vs.registerValidator(fechaNacimientoDatePicker, true, Validator.createEmptyValidator("Data de naixement obligatori"));
-        //https://howtodoinjava.com/regex/java-regex-validate-email-address/
-        vs.registerValidator(emailTextField, Validator.createRegexValidator("E-mail incorrecte", "^(.+)@(.+)$", Severity.ERROR));
-        vs.registerValidator(telefonTextField, Validator.createEmptyValidator("Telèfon ha de ser un número"));
-
-		//direccion
-		vs.registerValidator(localidadTextField, true, Validator.createEmptyValidator("Localitat es obligatori"));
-		vs.registerValidator(provinciaTextField, true, Validator.createEmptyValidator("Provincia es obligatori"));
-		vs.registerValidator(codPostalTextField, true, Validator.createEmptyValidator("Codi postal es obligatori"));
-		vs.registerValidator(domicilioTextField, true, Validator.createEmptyValidator("Domicili es obligatori"));
+		vs.registerValidator(horaEntradaTextField, true, Validator.createEmptyValidator("Hora d'entrada obligatoria"));
+		vs.registerValidator(horaSalidaTextField, true, Validator.createEmptyValidator("Hora de sortida obligatoria"));
+		vs.registerValidator(fechaEntradaDatePicker, true, Validator.createEmptyValidator("Data d'entrada obligatoria"));
+		vs.registerValidator(fechaSalidaDatePicker, true, Validator.createEmptyValidator("Data de sortidaobligatoria"));
 	}
 
 	public Stage getVentana() {
@@ -117,12 +104,12 @@ public class AsistenciaController{
 
 	@FXML private void onKeyPressedId(KeyEvent e) throws IOException {
 		if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.TAB){
-			//Comprovar si existeix la persona indicada en el control idTextField
-			persona = personesDAO.find(Integer.parseInt(idTextField.getText()));
-			mostrarPersona(persona);
+			//Comprovar si existeix la asistencia indicada en el control idTextField
+			asistencia = asistenciaDAO.find(Integer.parseInt(idTextField.getText()));
+			mostrarAsistencia(asistencia);
 			//seleccionar la fila de la taula asociada al codi introduit
-			personesTable.getSelectionModel().select(persona);
-			personesTable.refresh();
+			asistenciaTable.getSelectionModel().select(asistencia);
+			asistenciaTable.refresh();
 		}
 	}
 	 
@@ -131,40 +118,24 @@ public class AsistenciaController{
 		//verificar si les dades són vàlides
 		if(isDatosValidos()){
 			if(nouRegistre){
-				Direccion dir = new Direccion(localidadTextField.getText(),provinciaTextField.getText(),codPostalTextField.getText(),domicilioTextField.getText());
-				
-				persona = new Persona(
+				asistencia = new Asistencia(
 					Integer.parseInt(idTextField.getText()), 
-					dniTextField.getText(), 
-					nomTextField.getText(), 
-					cognomsTextField.getText(),
-					fechaNacimientoDatePicker.getValue(),
-					emailTextField.getText(), 
-					personesDAO.getArrayTelefonos(telefonTextField.getText()),
-					dir
+					null, 
+					null
 				);
-				personesData.add(persona);
+				asistenciaData.add(asistencia);
 
 			}else{
 				//modificació registre existent
-				persona = personesTable.getSelectionModel().getSelectedItem();
-				Array telefonos = personesDAO.getArrayTelefonos(telefonTextField.getText());
-				Direccion dir = new Direccion(localidadTextField.getText(),provinciaTextField.getText(),codPostalTextField.getText(),domicilioTextField.getText());
-				
-				persona.setDni(dniTextField.getText()); 
-				persona.setNom(nomTextField.getText()); 
-				persona.setApellidos(cognomsTextField.getText()); 
-				persona.setFecha_nacimiento(fechaNacimientoDatePicker.getValue()); 
-				persona.setEmail(emailTextField.getText()); 
-				persona.setTelefonos(telefonos);
-				persona.setDireccion(dir);
+				asistencia.setFechaEntrada(null);
+				asistencia.setFechaSalida(null);
 			}
 
-			personesDAO.save(persona);
+			asistenciaDAO.save(asistencia);
 			limpiarFormulario();
 
-			personesTable.refresh();
-			personesDAO.showAll();
+			asistenciaTable.refresh();
+			asistenciaDAO.showAll();
 		}
 	}
 
@@ -172,14 +143,14 @@ public class AsistenciaController{
 		if(isDatosValidos()){
 			// Mostrar missatge confirmació
 			Alert alert = new Alert(AlertType.CONFIRMATION);
-			alert.setHeaderText("Vol esborrar la persona " + idTextField.getText() + "?");
+			alert.setHeaderText("Vol esborrar la asistencia " + idTextField.getText() + "?");
 			Optional<ButtonType> result = alert.showAndWait();
 			if (result.get() == ButtonType.OK) {
-				if(personesDAO.delete(Integer.parseInt(idTextField.getText()))){ 
-					personesData.remove(personesTable.getSelectionModel().getSelectedIndex());
+				if(asistenciaDAO.delete(Integer.parseInt(idTextField.getText()))){ 
+					asistenciaData.remove(asistenciaTable.getSelectionModel().getSelectedIndex());
 
 					limpiarFormulario();
-					personesDAO.showAll();
+					asistenciaDAO.showAll();
 				}
 			}
 		}
@@ -192,7 +163,7 @@ public class AsistenciaController{
 	}
 
 	public void sortir(){
-		personesDAO.showAll();
+		asistenciaDAO.showAll();
 	}
 
 	private boolean isDatosValidos() {
@@ -215,53 +186,32 @@ public class AsistenciaController{
 
 	}
 
-	private void mostrarPersona(Persona persona) {
-		if(persona != null){ 
-			//llegir persona (posar els valors als controls per modificar-los)
+	private void mostrarAsistencia(Asistencia asistencia) {
+		if(asistencia != null){ 
+			//llegir asistencia (posar els valors als controls per modificar-los)
 			nouRegistre = false;
-			idTextField.setText(String.valueOf(persona.getId()));
-			dniTextField.setText(persona.getDni());
-			nomTextField.setText(persona.getNom());
-			cognomsTextField.setText(persona.getApellidos());
-			fechaNacimientoDatePicker.setValue(persona.getFecha_nacimiento());
-			emailTextField.setText(persona.getEmail());
-			telefonTextField.setText(personesDAO.getPhonesNumbersString(persona.getTelefonos().toString()));
+			idTextField.setText(String.valueOf(asistencia.getId()));
+			fechaEntradaDatePicker.setValue(null);
+			horaEntradaTextField.setText("");
+			fechaSalidaDatePicker.setValue(null);
+			horaSalidaTextField.setText("");
 
-			//direccion
-			provinciaTextField.setText(persona.getDireccion().getProvincia());
-			localidadTextField.setText(persona.getDireccion().getLocalidad());
-			codPostalTextField.setText(persona.getDireccion().getCod_postal());
-			domicilioTextField.setText(persona.getDireccion().getDomicilio());
 		}else{ 
 			//nou registre
 			nouRegistre = true;
 			//idTextField.setText(""); no hem de netejar la PK perquè l'usuari ha posat un valor
-			dniTextField.setText("");
-			nomTextField.setText("");
-			cognomsTextField.setText("");
-			fechaNacimientoDatePicker.setValue(null);
-			emailTextField.setText("");
-			telefonTextField.setText("");
-			//direccion
-			provinciaTextField.setText("");
-			localidadTextField.setText("");
-			codPostalTextField.setText("");
-			domicilioTextField.setText("");
+			fechaEntradaDatePicker.setValue(null);
+			horaEntradaTextField.setText("");
+			fechaSalidaDatePicker.setValue(null);
+			horaSalidaTextField.setText("");
 		}
 	}
 	
 	private void limpiarFormulario(){
 		idTextField.setText("");
-		dniTextField.setText("");
-		nomTextField.setText("");
-		cognomsTextField.setText("");
-		fechaNacimientoDatePicker.setValue(null);
-		emailTextField.setText("");
-		telefonTextField.setText("");
-		//direccion
-		provinciaTextField.setText("");
-		localidadTextField.setText("");
-		codPostalTextField.setText("");
-		domicilioTextField.setText("");
+		fechaEntradaDatePicker.setValue(null);
+		horaEntradaTextField.setText("");
+		fechaSalidaDatePicker.setValue(null);
+		horaSalidaTextField.setText("");
 	}
 }
